@@ -1,7 +1,7 @@
 /*
 * (C) Iain Fraser
 * Excercise in cache aware and cache oblivous algorithms. Simplify problem
-* by only dealing with square matricesi and out situ.
+* by only dealing with square matrices and out situ.
 */
 
 #include <stdio.h>
@@ -39,7 +39,7 @@ void init( matrix m ){
 	}
 }
 
-// cache ignorant and implementation.
+// cache ignorant implementation.
 void naive( matrix in, matrix out ){
 
 	for( int i = 0; i < N; i++ ){
@@ -49,7 +49,7 @@ void naive( matrix in, matrix out ){
 	}
 }
 
-// cache aware, l is the size of cache line.
+// cache aware.
 void caware( matrix in, matrix out ){
 	const int l = L;
 
@@ -72,7 +72,7 @@ void caware( matrix in, matrix out ){
 
 }
 
-#define OBLIV_MIN	4	// number of words in submatrix when cache oblvious gives up	
+#define OBLIV_MIN	4	// number of words in submatrix when cache oblivious gives up	
 
 void recur_coblivous( matrix in, matrix out, int row_off, int col_off, int m, int n ){
 	if( m > OBLIV_MIN || n > OBLIV_MIN ){
@@ -134,7 +134,7 @@ uint32_t experiment( char* name, transpose f, int trials, int iter, matrix in, m
 	printf("\n");
 }
 
-// rememer its out of situ so output of transpose is always the same no matter how many iterations
+// remember its out of situ so output of transpose is always the same no matter how many iterations
 int verify( matrix m ){
 	for( int i = 0; i < N; i++ ){
 		for( int j = 0; j < N; j++ ){
@@ -154,7 +154,9 @@ int main( int argc, char* argv[] ){
 	experiment( "naive", naive, 3, 100, m, out );
 	experiment( "cache aware", caware, 3, 100, m, out );
 	experiment( "cache oblivous", coblivous, 3, 100, m, out );
-	verify( out );	
+
+	// use to verify out individual of each
+//	verify( out );	
 #else		// unit testing 
 	print( m );
 	coblivous( m, out );
