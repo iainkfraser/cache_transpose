@@ -11,11 +11,15 @@
 
 #if 1 
 #define N	1024	
-//#define L	( 64 / sizeof(int) )	// cat /sys/devices/system/cpu/cpu0/cache/index0/coherency_line_size	
-#define L	4
+
+/* TODO: Change L to your cache line divided by word size  */
+#define L	( 64 / sizeof(int) )	// cat /sys/devices/system/cpu/cpu0/cache/index0/coherency_line_size	
+
 #else
+
 #define N	8
 #define L	4
+
 #endif
 
 
@@ -145,10 +149,10 @@ static int verify( matrix m ){
 	}	
 }
 
-/* store in bss not stack to stop segfault */
 int main( int argc, char* argv[] ){
 	matrix *m, *out;
 
+	// force pagealign
 	posix_memalign(&m, 1 << 20, sizeof(*m));
 	posix_memalign(&out, 1 << 20, sizeof(*m));
 
