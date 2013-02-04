@@ -1,5 +1,7 @@
 /*
-* (C) Iain Fraser
+* (C) Iain Fraser - GPLv3
+* Attached code for #sundayfun #article1 iainkfraser.blogspot.co.uk
+* 
 * Excercise in cache aware and cache oblivous algorithms. Simplify problem
 * by only dealing with square matrices and out situ.
 */
@@ -125,7 +127,7 @@ static uint32_t trial( transpose f, int iter, matrix in, matrix out ){
 }
 
 
-static uint32_t experiment( char* name, transpose f, int trials, int iter, matrix in, matrix out ){
+static void experiment( char* name, transpose f, int trials, int iter, matrix in, matrix out ){
 	uint32_t result[ trials ];
 
 	for( int j = 0; j < trials; j++ ){
@@ -140,7 +142,7 @@ static uint32_t experiment( char* name, transpose f, int trials, int iter, matri
 }
 
 // remember its out of situ so output of transpose is always the same no matter how many iterations
-static int verify( matrix m ){
+static void verify( matrix m ){
 	for( int i = 0; i < N; i++ ){
 		for( int j = 0; j < N; j++ ){
 			if( m[i][j] != ( j * N ) + ( i + 1 ) )
