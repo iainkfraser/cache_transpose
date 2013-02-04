@@ -11,7 +11,8 @@
 
 #if 1 
 #define N	1024	
-#define L	( 64 / sizeof(int) )	// cat /sys/devices/system/cpu/cpu0/cache/index0/coherency_line_size	
+//#define L	( 64 / sizeof(int) )	// cat /sys/devices/system/cpu/cpu0/cache/index0/coherency_line_size	
+#define L	4
 #else
 #define N	8
 #define L	4
@@ -21,7 +22,7 @@
 typedef int matrix[N][N];
 
 /* not cache efficent :) */
-void print( matrix m ){
+static void print( matrix m ){
 	for( int i = 0; i < N; i++ ){
 		for( int j = 0; j < N; j++ ){
 			printf("%d ", m[i][j] );
@@ -31,7 +32,7 @@ void print( matrix m ){
 	}
 } 
 
-void init( matrix m ){
+static void init( matrix m ){
 	for( int i = 0; i< N; i++ ){
 		for( int j = 0; j < N; j++ ){
 			m[i][j] = (N*i) + ( j + 1 );	
@@ -40,7 +41,7 @@ void init( matrix m ){
 }
 
 // cache ignorant implementation.
-void naive( matrix in, matrix out ){
+static void naive( matrix in, matrix out ){
 
 	for( int i = 0; i < N; i++ ){
 		for( int j = 0; j < N; j++ ){
@@ -50,7 +51,7 @@ void naive( matrix in, matrix out ){
 }
 
 // cache aware.
-void caware( matrix in, matrix out ){
+static void caware( matrix in, matrix out ){
 	const int l = L;
 
 	assert( !( N % l ) );
@@ -74,7 +75,7 @@ void caware( matrix in, matrix out ){
 
 #define OBLIV_MIN	4	// number of words in submatrix when cache oblivious gives up	
 
-void recur_coblivous( matrix in, matrix out, int row_off, int col_off, int m, int n ){
+static void recur_coblivous( matrix in, matrix out, int row_off, int col_off, int m, int n ){
 	if( m > OBLIV_MIN || n > OBLIV_MIN ){
 		if( n >= m ){
 			const int half_n = n / 2;
@@ -97,14 +98,14 @@ void recur_coblivous( matrix in, matrix out, int row_off, int col_off, int m, in
 	}
 }
 
-void coblivous( matrix in, matrix out ){
+static void coblivous( matrix in, matrix out ){
 	return recur_coblivous( in, out, 0, 0, N, N ); 
 }
 
 typedef void (*transpose)(matrix, matrix); 
 
 
-uint32_t trial( transpose f, int iter, matrix in, matrix out ){
+static uint32_t trial( transpose f, int iter, matrix in, matrix out ){
 	struct timeval tv;
 	gettimeofday( &tv, NULL );
 	uint32_t start = tv.tv_sec * 1000 + tv.tv_usec / 1000;
@@ -120,7 +121,7 @@ uint32_t trial( transpose f, int iter, matrix in, matrix out ){
 }
 
 
-uint32_t experiment( char* name, transpose f, int trials, int iter, matrix in, matrix out ){
+static uint32_t experiment( char* name, transpose f, int trials, int iter, matrix in, matrix out ){
 	uint32_t result[ trials ];
 
 	for( int j = 0; j < trials; j++ ){
@@ -135,7 +136,7 @@ uint32_t experiment( char* name, transpose f, int trials, int iter, matrix in, m
 }
 
 // remember its out of situ so output of transpose is always the same no matter how many iterations
-int verify( matrix m ){
+static int verify( matrix m ){
 	for( int i = 0; i < N; i++ ){
 		for( int j = 0; j < N; j++ ){
 			if( m[i][j] != ( j * N ) + ( i + 1 ) )
@@ -145,18 +146,23 @@ int verify( matrix m ){
 }
 
 /* store in bss not stack to stop segfault */
-matrix m, out;
-
 int main( int argc, char* argv[] ){
-	init( m );
+	matrix *m, *out;
+
+	posix_memalign(&m, 1 << 20, sizeof(*m));
+	posix_memalign(&out, 1 << 20, sizeof(*m));
+
+	init( *m );
 
 #if 1 
-	experiment( "naive", naive, 3, 100, m, out );
-	experiment( "cache aware", caware, 3, 100, m, out );
-	experiment( "cache oblivous", coblivous, 3, 100, m, out );
+	experiment( "naive", naive, 3, 100, *m, *out );
+	verify( *out );	
+	experiment( "cache aware", caware, 3, 100, *m, *out );
+	verify( *out );	
+	experiment( "cache oblivous", coblivous, 3, 100, *m, *out );
+	verify( *out );	
 
 	// use to verify out individual of each
-//	verify( out );	
 #else		// unit testing 
 	print( m );
 	coblivous( m, out );
